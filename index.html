@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notifikasi ntfy.sh</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background-color: #f9f9f9;
+    }
+    label, input, textarea {
+      display: block;
+      margin-top: 1rem;
+      width: 100%;
+      max-width: 600px;
+    }
+    textarea {
+      height: 120px;
+    }
+    button {
+      margin-top: 1.5rem;
+      padding: 0.5rem 1rem;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    .preview {
+      margin-top: 2rem;
+      background: #eef;
+      padding: 1rem;
+      border-left: 4px solid #0077cc;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🔔 Kirim Notifikasi ke ntfy.sh</h2>
+
+  <label for="channel">Channel</label>
+  <input type="text" id="channel" placeholder="Contoh: update" value="update-info-bar" />
+
+  <label for="title">Judul Notifikasi (boleh pakai {{impact}})</label>
+  <input type="text" id="title" value="🔧 [INFO] {{impact}}" />
+
+  <label for="date">Tanggal & Waktu</label>
+  <input type="text" id="date" value="Kamis, 08 Mei 2025 - 22.00 s/d 00.00 WIB" />
+
+  <label for="impact">Dampak</label>
+  <input type="text" id="impact" value="Maintenance Jaringan" />
+
+  <label for="template">Template Pesan</label>
+  <textarea id="template">
+🚨 Maintenance Jaringan
+🗓️ {{date}}
+⚠️ {{impact}}
+📢 Info selesai menyusul
+
+Terima kasih.
+- Tim TI
+  </textarea>
+
+  <button onclick="sendNotification()">🚀 Kirim Notifikasi</button>
+
+  <h3>🔍 Preview</h3>
+  <div class="preview" id="preview"></div>
+
+  <script>
+    const titleInput = document.getElementById('title');
+    const dateInput = document.getElementById('date');
+    const impactInput = document.getElementById('impact');
+    const templateInput = document.getElementById('template');
+    const previewDiv = document.getElementById('preview');
+
+    function interpolate(template, values) {
+      return template.replace(/{{\s*(\w+)\s*}}/g, (_, key) => values[key] || '');
+    }
+
+    function updatePreview() {
+      const values = {
+        date: dateInput.value,
+        impact: impactInput.value
+      };
+      const finalTitle = interpolate(titleInput.value, values);
+      const finalMessage = interpolate(templateInput.value, values);
+
+      previewDiv.innerHTML = `<strong>Title:</strong> ${finalTitle}<br><br><strong>Body:</strong><br>${finalMessage}`;
+    }
+
+    async function sendNotification() {
+      const channel = document.getElementById('channel').value;
+      const values = {
+        date: dateInput.value,
+        impact: impactInput.value
+      };
+
+      const finalTitle = interpolate(titleInput.value, values);
+      const finalMessage = interpolate(templateInput.value, values);
+
+      try {
+        const res = await fetch(`https://ntfy.sh/${channel}`, {
+          method: 'POST',
+          headers: {
+            'Title': finalTitle,
+            'Priority': '5'
+          },
+          body: finalMessage
+        });
+
+        if (res.ok) {
+          alert("✅ Notifikasi berhasil dikirim!");
+        } else {
+          alert("❌ Gagal mengirim notifikasi.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("⚠️ Terjadi kesalahan saat mengirim.");
+      }
+    }
+
+    // Update preview on input
+    [titleInput, dateInput, impactInput, templateInput].forEach(input => {
+      input.addEventListener('input', updatePreview);
+    });
+
+    // Initial render
+    updatePreview();
+  </script>
+</body>
+</html>
